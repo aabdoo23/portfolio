@@ -48,22 +48,24 @@ export default function Desktop({ initialBg, backgroundMap }: AppLayoutProps) {
   useEffect(() => {
     const bgKeys = Object.keys(backgroundMap);
     
-    // Ensure currentBg exists in backgroundMap, fallback to first available or initialBg
-    if (bgKeys.length > 0 && !backgroundMap[currentBg]) {
-      const fallbackBg = bgKeys[0] || initialBg;
-      setCurrentBg(fallbackBg);
-      localStorage.setItem('lastBackground', fallbackBg);
-      return;
-    } else if (bgKeys.length === 0) {
-      // If no backgrounds available, clear currentBg
+    if (bgKeys.length === 0) {
       setCurrentBg('');
       return;
     }
 
+    // On mount, check localStorage first, then fall back to initialBg
     const lastBg = localStorage.getItem('lastBackground');
+    const validLastBg = lastBg && backgroundMap[lastBg] ? lastBg : null;
+    
+    // If we have a valid lastBg that's different from initialBg, use it
+    if (validLastBg && validLastBg !== initialBg) {
+      setCurrentBg(validLastBg);
+      return;
+    }
 
-    if (lastBg === initialBg && bgKeys.length > 1) {
-      const availableBgs = bgKeys.filter((bg) => bg !== lastBg);
+    // If lastBg matches initialBg and we have multiple backgrounds, pick a different one
+    if (validLastBg === initialBg && bgKeys.length > 1) {
+      const availableBgs = bgKeys.filter((bg) => bg !== initialBg);
       if (availableBgs.length > 0) {
         const newBg = availableBgs[Math.floor(Math.random() * availableBgs.length)];
         setCurrentBg(newBg);
@@ -72,9 +74,15 @@ export default function Desktop({ initialBg, backgroundMap }: AppLayoutProps) {
       }
     }
 
-    // Update localStorage with current background
-    if (backgroundMap[currentBg]) {
-      localStorage.setItem('lastBackground', currentBg);
+    // Otherwise, use initialBg and save it
+    if (backgroundMap[initialBg]) {
+      setCurrentBg(initialBg);
+      localStorage.setItem('lastBackground', initialBg);
+    } else if (bgKeys.length > 0) {
+      // Fallback to first available background
+      const fallbackBg = bgKeys[0];
+      setCurrentBg(fallbackBg);
+      localStorage.setItem('lastBackground', fallbackBg);
     }
   }, [initialBg, backgroundMap]);
 
@@ -221,3 +229,4 @@ export default function Desktop({ initialBg, backgroundMap }: AppLayoutProps) {
     </div>
   );
 }
+

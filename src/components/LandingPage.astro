@@ -22,15 +22,18 @@ backgroundMap = Object.fromEntries(
   backgrounds.map((bg, index) => [`bg-${index + 1}`, bg.url])
 );
 
-function getRandomBackground() {
+// Use deterministic default to avoid hydration mismatch
+// The client-side useEffect will handle random selection after hydration
+function getInitialBackground() {
   const bgKeys = Object.keys(backgroundMap);
   if (bgKeys.length === 0) return '';
-  return bgKeys[Math.floor(Math.random() * bgKeys.length)];
+  // Use first background as deterministic default
+  return bgKeys[0];
 }
 ---
 
 <AppLayout
   client:load
-  initialBg={getRandomBackground()}
+  initialBg={getInitialBackground()}
   backgroundMap={backgroundMap}
 />
