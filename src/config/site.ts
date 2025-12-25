@@ -5,8 +5,8 @@
 import type { SEOConfig } from '../types';
 
 export const seo: SEOConfig = {
-  title: '~Happy birthday~',
-  description: 'Happy birthday',
+  title: '~For Mohamed~',
+  description: 'For Mohamed',
   keywords: [],
 };
 
