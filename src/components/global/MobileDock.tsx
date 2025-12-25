@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import AppleMusicPlayer from './AppleMusicPlayer';
 import appleNotesIcon from '../../assets/images/apple-notes.svg?url';
 import applePhotosIcon from '../../assets/images/apple-photos.svg?url';
 import appleMusicIcon from '../../assets/images/apple-music.svg?url';
@@ -10,6 +11,7 @@ interface MobileDockProps {
 
 export default function MobileDock({ onNotesClick, onPhotoAlbumClick }: MobileDockProps) {
   const [playlistId, setPlaylistId] = useState<string | null>(null);
+  const [showAppleMusic, setShowAppleMusic] = useState(false);
 
   // Fetch app config from API
   useEffect(() => {
@@ -37,9 +39,11 @@ export default function MobileDock({ onNotesClick, onPhotoAlbumClick }: MobileDo
   }, []);
 
   const handleAppleMusicClick = () => {
-    if (playlistId) {
-      window.open(playlistId, '_blank');
-    }
+    setShowAppleMusic(true);
+  };
+
+  const handleCloseAppleMusic = () => {
+    setShowAppleMusic(false);
   };
 
   return (
@@ -72,7 +76,26 @@ export default function MobileDock({ onNotesClick, onPhotoAlbumClick }: MobileDo
             />
           </div>
         </button>
+        <button
+          onClick={handleAppleMusicClick}
+          aria-label='Open Apple Music'
+          className='flex flex-col items-center cursor-pointer'
+        >
+          <div className='w-18 h-18 bg-gradient-to-t from-pink-600 to-pink-400 rounded-2xl overflow-hidden'>
+            <img 
+              src={appleMusicIcon} 
+              alt="Apple Music"
+              className="w-full h-full"
+            />
+          </div>
+        </button>
       </div>
+
+      <AppleMusicPlayer
+        isOpen={showAppleMusic}
+        onClose={handleCloseAppleMusic}
+        playlistId={playlistId}
+      />
     </div>
   );
 }

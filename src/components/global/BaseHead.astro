@@ -8,8 +8,8 @@ import { userConfig } from '../../config/index';
 let ogImageUrl: string | undefined = undefined;
 
 try {
-  const baseUrl = import.meta.env.PUBLIC_SITE_URL || (import.meta.env.DEV ? 'http://localhost:4321' : '');
-  const apiUrl = baseUrl ? `${baseUrl}/api/content/backgrounds` : '/api/content/backgrounds';
+  const baseUrl = import.meta.env.PUBLIC_SITE_URL || Astro.url.origin;
+  const apiUrl = `${baseUrl}/api/content/backgrounds`;
   const response = await fetch(apiUrl);
   if (response.ok) {
     const backgrounds = await response.json();

@@ -12,7 +12,7 @@ export default function ShortcutHint() {
   ];
   
   return (
-    <div className="fixed top-8 left-4 z-[1] animate-fade-in">
+    <div className="fixed top-8 left-4 z-[1] animate-fade-in hidden md:block">
       <div className="bg-gray-900/90 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-2 shadow-xl">
         <div className="flex items-center gap-3 text-sm text-gray-300">
           {shortcuts.map((shortcut, idx) => (

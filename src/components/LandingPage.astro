@@ -6,9 +6,9 @@ let backgrounds: Array<{ id: string; url: string; display_url?: string }> = [];
 let backgroundMap: Record<string, string> = {};
 
 try {
-  // Try to fetch from API - use relative URL for same-origin requests
-  const baseUrl = import.meta.env.PUBLIC_SITE_URL || (import.meta.env.DEV ? 'http://localhost:4321' : '');
-  const apiUrl = baseUrl ? `${baseUrl}/api/content/backgrounds` : '/api/content/backgrounds';
+  // Try to fetch from API - use absolute URL for SSR
+  const baseUrl = import.meta.env.PUBLIC_SITE_URL || Astro.url.origin;
+  const apiUrl = `${baseUrl}/api/content/backgrounds`;
   const response = await fetch(apiUrl);
   if (response.ok) {
     backgrounds = await response.json();
@@ -22,18 +22,15 @@ backgroundMap = Object.fromEntries(
   backgrounds.map((bg, index) => [`bg-${index + 1}`, bg.url])
 );
 
-// Use deterministic default to avoid hydration mismatch
-// The client-side useEffect will handle random selection after hydration
-function getInitialBackground() {
+function getRandomBackground() {
   const bgKeys = Object.keys(backgroundMap);
   if (bgKeys.length === 0) return '';
-  // Use first background as deterministic default
-  return bgKeys[0];
+  return bgKeys[Math.floor(Math.random() * bgKeys.length)];
 }
 ---
 
 <AppLayout
   client:load
-  initialBg={getInitialBackground()}
+  initialBg={getRandomBackground()}
   backgroundMap={backgroundMap}
 />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import DraggableWindow from './DraggableWindow';
-import { FaChevronLeft, FaChevronRight, FaTimes, FaSearch, FaPlay } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaTimes, FaPlay } from 'react-icons/fa';
 
 interface MediaItem {
   url: string;
@@ -21,7 +21,6 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartX = useRef<number | null>(null);
@@ -29,28 +28,35 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // Filter photos based on search
-  const filteredPhotos = photos.filter((item) => {
-    if (!searchQuery) return true;
-    return item.url.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  // 1. Handle URL changes - reset everything
+  useEffect(() => {
+    setPhotos([]);
+    setError(null);
+    setLoading(true);
+    setVisibleItems(new Set());
+  }, [albumUrl]);
 
   useEffect(() => {
     if (!isOpen) return;
-    setLoading(true);
-    setError(null);
-    setPhotos([]);
+
+    // Reset UI state
     setSelectedPhotoIndex(null);
     setIsFullScreen(false);
     setZoomLevel(1);
-    setSearchQuery('');
-    setVisibleItems(new Set());
+
+    // If we already have photos, don't fetch again
+    if (photos.length > 0) {
+      setLoading(false);
+      return;
+    }
 
     if (!albumUrl) {
       setError('Album URL not configured');
       setLoading(false);
       return;
     }
+    
+    setLoading(true);
 
     const fetchAlbum = async () => {
       try {
@@ -96,11 +102,11 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
       }
     };
     fetchAlbum();
-  }, [isOpen, albumUrl]);
+  }, [isOpen, albumUrl, photos.length]);
 
   // Intersection Observer for lazy loading images
   useEffect(() => {
-    if (!isOpen || loading || filteredPhotos.length === 0) {
+    if (!isOpen || loading || photos.length === 0) {
       setVisibleItems(new Set());
       return;
     }
@@ -135,7 +141,7 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
         observerRef.current.disconnect();
       }
     };
-  }, [isOpen, loading, filteredPhotos.length]);
+  }, [isOpen, loading, photos.length]);
 
   // Keyboard navigation for full-screen viewer
   useEffect(() => {
@@ -148,12 +154,12 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
         setZoomLevel(1);
       } else if (e.key === 'ArrowLeft' && selectedPhotoIndex !== null) {
         e.preventDefault();
-        const prevIndex = selectedPhotoIndex > 0 ? selectedPhotoIndex - 1 : filteredPhotos.length - 1;
+        const prevIndex = selectedPhotoIndex > 0 ? selectedPhotoIndex - 1 : photos.length - 1;
         setSelectedPhotoIndex(prevIndex);
         setZoomLevel(1);
       } else if (e.key === 'ArrowRight' && selectedPhotoIndex !== null) {
         e.preventDefault();
-        const nextIndex = selectedPhotoIndex < filteredPhotos.length - 1 ? selectedPhotoIndex + 1 : 0;
+        const nextIndex = selectedPhotoIndex < photos.length - 1 ? selectedPhotoIndex + 1 : 0;
         setSelectedPhotoIndex(nextIndex);
         setZoomLevel(1);
       }
@@ -161,7 +167,7 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isFullScreen, selectedPhotoIndex, filteredPhotos.length]);
+  }, [isOpen, isFullScreen, selectedPhotoIndex, photos.length]);
 
   // Touch handlers for swipe gestures
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -181,11 +187,11 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
     if (Math.abs(distance) > minSwipeDistance) {
       if (distance > 0) {
         // Swipe left - next photo
-        const nextIndex = selectedPhotoIndex < filteredPhotos.length - 1 ? selectedPhotoIndex + 1 : 0;
+        const nextIndex = selectedPhotoIndex < photos.length - 1 ? selectedPhotoIndex + 1 : 0;
         setSelectedPhotoIndex(nextIndex);
       } else {
         // Swipe right - previous photo
-        const prevIndex = selectedPhotoIndex > 0 ? selectedPhotoIndex - 1 : filteredPhotos.length - 1;
+        const prevIndex = selectedPhotoIndex > 0 ? selectedPhotoIndex - 1 : photos.length - 1;
         setSelectedPhotoIndex(prevIndex);
       }
       setZoomLevel(1);
@@ -215,7 +221,7 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
 
   const handleNextPhoto = () => {
     if (selectedPhotoIndex === null) return;
-    const nextIndex = selectedPhotoIndex < filteredPhotos.length - 1 ? selectedPhotoIndex + 1 : 0;
+    const nextIndex = selectedPhotoIndex < photos.length - 1 ? selectedPhotoIndex + 1 : 0;
     setSelectedPhotoIndex(nextIndex);
     setZoomLevel(1);
     setIsPlayingVideo(false);
@@ -227,7 +233,7 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
 
   const handlePrevPhoto = () => {
     if (selectedPhotoIndex === null) return;
-    const prevIndex = selectedPhotoIndex > 0 ? selectedPhotoIndex - 1 : filteredPhotos.length - 1;
+    const prevIndex = selectedPhotoIndex > 0 ? selectedPhotoIndex - 1 : photos.length - 1;
     setSelectedPhotoIndex(prevIndex);
     setZoomLevel(1);
     setIsPlayingVideo(false);
@@ -247,8 +253,8 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
 
   if (!isOpen) return null;
 
-  const currentPhoto: MediaItem | null = selectedPhotoIndex !== null && selectedPhotoIndex < filteredPhotos.length 
-    ? filteredPhotos[selectedPhotoIndex] 
+  const currentPhoto: MediaItem | null = selectedPhotoIndex !== null && selectedPhotoIndex < photos.length 
+    ? photos[selectedPhotoIndex] 
     : null;
 
   return (
@@ -265,21 +271,11 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
           <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm">
             <div className="flex items-center gap-3 flex-1">
               <h1 className="text-lg font-semibold text-gray-900">Photos</h1>
-              {filteredPhotos.length > 0 && (
+              {photos.length > 0 && (
                 <span className="text-sm text-gray-500">
-                  {filteredPhotos.length} {filteredPhotos.length === 1 ? 'photo' : 'photos'}
+                  {photos.length} {photos.length === 1 ? 'photo' : 'photos'}
                 </span>
               )}
-            </div>
-            <div className="relative w-64">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
-              <input
-                type="text"
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-gray-100 text-gray-900 text-sm rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
-              />
             </div>
           </div>
 
@@ -307,21 +303,18 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
                 </a>
                 )}
               </div>
-            ) : filteredPhotos.length === 0 ? (
+            ) : photos.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <p className="text-gray-400 text-lg mb-2">
-                    {searchQuery ? 'No photos found' : 'No photos in album'}
+                    No photos in album
                   </p>
-                  {searchQuery && (
-                    <p className="text-gray-400 text-sm">Try a different search term</p>
-                  )}
                 </div>
               </div>
             ) : (
               <div className="p-4">
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1">
-                  {filteredPhotos.map((item, index) => {
+                  {photos.map((item, index) => {
                     const isVisible = visibleItems.has(index);
                     const shouldLoad = isVisible || index < 12; // Load first 12 immediately
                     
@@ -389,16 +382,16 @@ export default function PhotoAlbumPlayer({ isOpen, onClose, albumUrl }: PhotoAlb
             >
               <FaTimes />
             </button>
-            {filteredPhotos.length > 1 && (
+            {photos.length > 1 && (
               <div className="text-white text-sm font-medium">
-                {selectedPhotoIndex !== null ? selectedPhotoIndex + 1 : 0} of {filteredPhotos.length}
+                {selectedPhotoIndex !== null ? selectedPhotoIndex + 1 : 0} of {photos.length}
               </div>
             )}
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
 
           {/* Navigation Buttons */}
-          {filteredPhotos.length > 1 && (
+          {photos.length > 1 && (
             <>
               <button
                 onClick={(e) => {

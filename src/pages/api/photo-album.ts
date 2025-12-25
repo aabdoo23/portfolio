@@ -13,6 +13,30 @@ const json = (data: unknown, status = 200) =>
 
 const bad = (message: string, status = 400) => json({ error: message }, status);
 
+// Simple in-memory cache
+const cache = new Map<string, { data: any, timestamp: number }>();
+const CACHE_TTL = 1000 * 60 * 10; // 10 minutes cache
+
+function getCachedData(key: string) {
+  const cached = cache.get(key);
+  if (cached) {
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+    cache.delete(key); // Expired
+  }
+  return null;
+}
+
+function setCachedData(key: string, data: any) {
+  // Limit cache size to prevent memory leaks
+  if (cache.size > 100) {
+    const firstKey = cache.keys().next().value;
+    if (firstKey) cache.delete(firstKey);
+  }
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
 // Extract the album id from the provided albumUrl, fallback to default if missing
 const DEFAULT_ALBUM_ID = 'B2EJtdOXm2MG2Rb';
 
@@ -41,6 +65,14 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const ALBUM_ID = getAlbumIdFromUrl(albumUrl);
+  
+  // Check cache first
+  const cached = getCachedData(ALBUM_ID);
+  if (cached) {
+    console.log('[photo-album] Serving from cache:', ALBUM_ID);
+    return json(cached);
+  }
+
   const BASE_URL = `https://p107-sharedstreams.icloud.com/${ALBUM_ID}/sharedstreams`;
 
   console.log('[photo-album] Fetching album:', ALBUM_ID);
@@ -252,7 +284,10 @@ export const POST: APIRoute = async ({ request }) => {
       return bad('No valid media URLs found', 404);
     }
 
-    return json({ photos: mediaItems });
+    const responseData = { photos: mediaItems };
+    setCachedData(ALBUM_ID, responseData); // Save to cache
+    
+    return json(responseData);
   } catch (err: any) {
     console.error('[photo-album] Error fetching iCloud photos', err);
     return bad(err?.message || 'Unknown error occurred', 500);
