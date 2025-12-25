@@ -1,12 +1,12 @@
 /**
- * SEO and theme configuration
+ * SEO configuration
  */
 
 import type { SEOConfig } from '../types';
 
 export const seo: SEOConfig = {
-  title: '~For Mohamed~',
-  description: 'For Mohamed',
+  title: 'Custom Website',
+  description: 'Custom Website',
   keywords: [],
 };
 

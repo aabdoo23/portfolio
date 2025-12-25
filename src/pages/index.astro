@@ -2,16 +2,35 @@
 import Layout from '../layouts/Layout.astro';
 import LandingPage from '../components/LandingPage.astro';
 import { userConfig } from '../config/index';
+
+// Fetch SEO config from API with fallback to site.ts
+let seoTitle = userConfig.seo.title;
+let seoDescription = userConfig.seo.description;
+
+try {
+  const baseUrl = import.meta.env.PUBLIC_SITE_URL || Astro.url.origin;
+  const apiUrl = `${baseUrl}/api/content/config`;
+  const response = await fetch(apiUrl);
+  if (response.ok) {
+    const config = await response.json();
+    if (config.seo) {
+      if (config.seo.title) seoTitle = config.seo.title;
+      if (config.seo.description) seoDescription = config.seo.description;
+    }
+  }
+} catch (error) {
+  console.warn('[index.astro] Failed to fetch SEO config from API, using fallback');
+}
 ---
 
 <Layout
-  title={userConfig.seo.title}
-  description={userConfig.seo.description}
+  title={seoTitle}
+  description={seoDescription}
   canonical=""
   openGraph={{
     url: "",
-    title: userConfig.seo.title,
-    description: userConfig.seo.description,
+    title: seoTitle,
+    description: seoDescription,
     site_name: "",
   }}
 >

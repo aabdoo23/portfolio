@@ -38,6 +38,9 @@ export const GET: APIRoute = async () => {
     const dbPlaylistUrl = configMap.get('apple_music_playlist_url');
     const dbPlaylistName = configMap.get('apple_music_playlist_name');
     const dbAlbumUrl = configMap.get('icloud_photos_album_url');
+    const dbSeoTitle = configMap.get('seo_title');
+    const dbSeoDescription = configMap.get('seo_description');
+    const dbSeoKeywords = configMap.get('seo_keywords');
     
     // Return database values - must be valid strings
     const appleMusicPlaylistUrl = (dbPlaylistUrl && typeof dbPlaylistUrl === 'string' && dbPlaylistUrl.trim()) 
@@ -49,6 +52,26 @@ export const GET: APIRoute = async () => {
     const iCloudPhotosAlbumUrl = (dbAlbumUrl && typeof dbAlbumUrl === 'string' && dbAlbumUrl.trim())
       ? dbAlbumUrl.trim()
       : null;
+    
+    // SEO config - parse keywords as JSON array
+    const seoTitle = (dbSeoTitle && typeof dbSeoTitle === 'string' && dbSeoTitle.trim()) 
+      ? dbSeoTitle.trim() 
+      : null;
+    const seoDescription = (dbSeoDescription && typeof dbSeoDescription === 'string' && dbSeoDescription.trim())
+      ? dbSeoDescription.trim()
+      : null;
+    let seoKeywords: string[] = [];
+    if (dbSeoKeywords && typeof dbSeoKeywords === 'string' && dbSeoKeywords.trim()) {
+      try {
+        const parsed = JSON.parse(dbSeoKeywords.trim());
+        if (Array.isArray(parsed)) {
+          seoKeywords = parsed.filter(k => typeof k === 'string');
+        }
+      } catch (e) {
+        // If JSON parsing fails, treat as comma-separated string
+        seoKeywords = dbSeoKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
+      }
+    }
 
     return json({
       music: {
@@ -57,6 +80,11 @@ export const GET: APIRoute = async () => {
       },
       photoAlbum: {
         albumUrl: iCloudPhotosAlbumUrl,
+      },
+      seo: {
+        title: seoTitle,
+        description: seoDescription,
+        keywords: seoKeywords,
       },
     });
   } catch (err) {

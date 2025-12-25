@@ -203,11 +203,15 @@ export default function AdminDashboard() {
       if (response.ok) {
         const data = await response.json();
         setConfig(data);
-        // Initialize editing state with current values
+        // Initialize editing state with current values, and ensure SEO fields exist
         const editingState: Record<string, string> = {};
         Object.keys(data).forEach((key) => {
           editingState[key] = data[key].value;
         });
+        // Ensure SEO fields exist in editing state (for creating new entries)
+        if (!editingState['seo_title']) editingState['seo_title'] = '';
+        if (!editingState['seo_description']) editingState['seo_description'] = '';
+        if (!editingState['seo_keywords']) editingState['seo_keywords'] = JSON.stringify([]);
         setEditingConfig(editingState);
       } else {
         setConfigError('Failed to load config');
@@ -558,35 +562,124 @@ export default function AdminDashboard() {
             {configLoading ? (
               <div className="text-center py-8">Loading config...</div>
             ) : (
-              <div className="space-y-4">
-                {Object.keys(config).map((key) => (
-                  <div key={key} className="bg-gray-800 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      {key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={editingConfig[key] || ''}
-                        onChange={(e) =>
-                          setEditingConfig({ ...editingConfig, [key]: e.target.value })
+              <div className="space-y-6">
+                {/* SEO Section */}
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">SEO Configuration</h3>
+                  <div className="space-y-4">
+                    {['seo_title', 'seo_description', 'seo_keywords'].map((key) => {
+                      const isKeywords = key === 'seo_keywords';
+                      const existingValue = config[key];
+                      
+                      // For keywords, convert JSON array to comma-separated for display
+                      const getDisplayValue = () => {
+                        const val = editingConfig[key] !== undefined 
+                          ? editingConfig[key] 
+                          : (existingValue?.value || '');
+                        if (isKeywords && val) {
+                          try {
+                            const parsed = JSON.parse(val);
+                            if (Array.isArray(parsed)) {
+                              return parsed.join(', ');
+                            }
+                          } catch {
+                            return val;
+                          }
                         }
-                        className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        onClick={() => handleUpdateConfig(key)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                      >
-                        Save
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Last updated: {new Date(config[key].updated_at).toLocaleString()}
-                    </p>
+                        return val;
+                      };
+                      
+                      const handleValueChange = (newValue: string) => {
+                        if (isKeywords) {
+                          const keywordsArray = newValue
+                            .split(',')
+                            .map(k => k.trim())
+                            .filter(k => k.length > 0);
+                          setEditingConfig({ ...editingConfig, [key]: JSON.stringify(keywordsArray) });
+                        } else {
+                          setEditingConfig({ ...editingConfig, [key]: newValue });
+                        }
+                      };
+
+                      const labelText = key === 'seo_title' 
+                        ? 'SEO Title'
+                        : key === 'seo_description'
+                        ? 'SEO Description'
+                        : 'SEO Keywords (comma-separated)';
+
+                      return (
+                        <div key={key} className="bg-gray-800 rounded-lg p-4">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            {labelText}
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={getDisplayValue()}
+                              onChange={(e) => handleValueChange(e.target.value)}
+                              placeholder={isKeywords ? "keyword1, keyword2, keyword3" : undefined}
+                              className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <button
+                              onClick={() => handleUpdateConfig(key)}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                            >
+                              Save
+                            </button>
+                          </div>
+                          {isKeywords && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Keywords will be stored as a JSON array
+                            </p>
+                          )}
+                          {existingValue && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              Last updated: {new Date(existingValue.updated_at).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-                {Object.keys(config).length === 0 && !configLoading && (
-                  <div className="text-center py-8 text-gray-400">No configuration found</div>
+                </div>
+
+                {/* Other Config Section */}
+                {Object.keys(config).filter(key => !key.startsWith('seo_')).length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-4">Other Configuration</h3>
+                    <div className="space-y-4">
+                      {Object.keys(config).filter(key => !key.startsWith('seo_')).map((key) => {
+                        const labelText = key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+
+                        return (
+                          <div key={key} className="bg-gray-800 rounded-lg p-4">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                              {labelText}
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={editingConfig[key] || ''}
+                                onChange={(e) =>
+                                  setEditingConfig({ ...editingConfig, [key]: e.target.value })
+                                }
+                                className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                              <button
+                                onClick={() => handleUpdateConfig(key)}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                              >
+                                Save
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Last updated: {new Date(config[key].updated_at).toLocaleString()}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
               </div>
             )}

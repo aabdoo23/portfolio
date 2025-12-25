@@ -4,11 +4,35 @@ import '../../styles/global.css';
 import { AstroSeo } from '@astrolib/seo';
 import { userConfig } from '../../config/index';
 
+// Build base URL for API calls
+const baseUrl = import.meta.env.PUBLIC_SITE_URL || Astro.url.origin;
+
+// Fetch SEO config from API with fallback to site.ts
+let seoTitle = userConfig.seo.title;
+let seoDescription = userConfig.seo.description;
+let seoKeywords = userConfig.seo.keywords;
+
+try {
+  const apiUrl = `${baseUrl}/api/content/config`;
+  const response = await fetch(apiUrl);
+  if (response.ok) {
+    const config = await response.json();
+    if (config.seo) {
+      if (config.seo.title) seoTitle = config.seo.title;
+      if (config.seo.description) seoDescription = config.seo.description;
+      if (config.seo.keywords && Array.isArray(config.seo.keywords)) {
+        seoKeywords = config.seo.keywords;
+      }
+    }
+  }
+} catch (error) {
+  console.warn('[BaseHead] Failed to fetch SEO config from API, using fallback');
+}
+
 // Fetch backgrounds from API for OG image
 let ogImageUrl: string | undefined = undefined;
 
 try {
-  const baseUrl = import.meta.env.PUBLIC_SITE_URL || Astro.url.origin;
   const apiUrl = `${baseUrl}/api/content/backgrounds`;
   const response = await fetch(apiUrl);
   if (response.ok) {
@@ -38,13 +62,13 @@ const ogUrl = Astro.props.openGraph?.url || siteOrigin;
 
 <!-- SEO Configuration -->
 <AstroSeo
-  title={Astro.props.title || userConfig.seo.title}
-  description={Astro.props.description || userConfig.seo.description}
+  title={Astro.props.title || seoTitle}
+  description={Astro.props.description || seoDescription}
   canonical={canonicalUrl}
   openGraph={{
     url: ogUrl,
-    title: Astro.props.openGraph?.title || userConfig.seo.title,
-    description: Astro.props.openGraph?.description || userConfig.seo.description,
+    title: Astro.props.openGraph?.title || seoTitle,
+    description: Astro.props.openGraph?.description || seoDescription,
     ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
     site_name: Astro.props.openGraph?.site_name || "",
   }}
@@ -52,6 +76,9 @@ const ogUrl = Astro.props.openGraph?.url || siteOrigin;
     cardType: 'summary_large_image',
   }}
 />
+{seoKeywords.length > 0 && (
+  <meta name="keywords" content={seoKeywords.join(', ')} />
+)}
 
 <!-- JSON-LD Schema.org -->
 {siteOrigin && (
@@ -61,7 +88,7 @@ const ogUrl = Astro.props.openGraph?.url || siteOrigin;
       '@type': 'WebSite',
       url: siteOrigin,
       name: "",
-      description: userConfig.seo.description,
+      description: seoDescription,
     })}
   </script>
 )}
