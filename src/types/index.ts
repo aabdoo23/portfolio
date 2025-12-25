@@ -17,138 +17,16 @@ export interface Image {
 }
 
 // ============================================
-// Project Types
-// ============================================
-
-export interface FileNode {
-  name: string;
-  type: 'file' | 'directory';
-  children?: readonly FileNode[];
-}
-
-export interface ProjectStructure {
-  root: string;
-  children: readonly FileNode[];
-}
-
-export interface Project {
-  id: string;
-  title: string;
-  description: string;
-  repoUrl: string;
-  liveUrl?: string;
-  techStack: readonly string[];
-  structure: ProjectStructure;
-  images: readonly Image[];
-}
-
-// ============================================
-// Education Types
-// ============================================
-
-export interface Education {
-  degree: string;
-  major?: string;
-  institution: string;
-  location: string;
-  year: string;
-  description?: string;
-  images?: readonly Image[];
-}
-
-export interface Course {
-  title: string;
-  description: string;
-  institution: string;
-  location: string;
-  year: string;
-  images?: readonly Image[];
-}
-
-// ============================================
-// Experience Types
-// ============================================
-
-export interface Experience {
-  title: string;
-  company: string;
-  location: string;
-  period: string;
-  description: string;
-  technologies?: readonly string[];
-  images?: readonly Image[];
-}
-
-// ============================================
-// Extracurricular Types
-// ============================================
-
-export interface ExtraCurricularRole {
-  role: string;
-  institution: string;
-  location: string;
-  year: string;
-  images?: readonly Image[];
-}
-
-export interface ExtraCurricularActivity {
-  title: string;
-  description: string;
-  institution: string;
-  location: string;
-  year: string;
-  images?: readonly Image[];
-}
-
-// ============================================
-// Competition Types
-// ============================================
-
-export interface Competition {
-  title: string;
-  description: string;
-  achievement: string;
-  year: string;
-  images?: readonly Image[];
-}
-
-// ============================================
-// Contact & Social Types
-// ============================================
-
-export interface SocialLinks {
-  github: string;
-  linkedin: string;
-}
-
-export interface ContactInfo {
-  email: string;
-  phone: string;
-  calendly: string;
-}
-
-// ============================================
 // Configuration Types
 // ============================================
 
-export interface PersonalInfo {
-  name: string;
-  role: string;
-  location: string;
-  email: string;
-  website: string;
-  roleFocus: string;
-  yearOfBirth: number;
-}
-
-export interface SpotifyConfig {
+export interface MusicConfig {
   playlistId: string;
   playlistName: string;
 }
 
-export interface ResumeConfig {
-  url: string;
-  localPath: string;
+export interface PhotoAlbumConfig {
+  albumUrl: string;
 }
 
 export interface SEOConfig {
@@ -157,45 +35,13 @@ export interface SEOConfig {
   keywords: readonly string[];
 }
 
-export interface ThemeConfig {
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-}
-
 // ============================================
 // Main Config Type
 // ============================================
 
 export interface UserConfig {
-  // Personal Information
-  name: string;
-  role: string;
-  location: string;
-  email: string;
-  website: string;
-  roleFocus: string;
-  yearOfBirth: number;
-
-  // Social & Contact
-  social: SocialLinks;
-  contact: ContactInfo;
-
-  // Configuration
-  spotify: SpotifyConfig;
-  resume: ResumeConfig;
+  // SEO Configuration (music/photoAlbum are fetched from Supabase at runtime)
   seo: SEOConfig;
-  theme: ThemeConfig;
-
-  // Content
-  education: readonly Education[];
-  courses: readonly Course[];
-  skills: readonly string[];
-  extraCurricularRoles: readonly ExtraCurricularRole[];
-  extraCurricularActivities: readonly ExtraCurricularActivity[];
-  competitions: readonly Competition[];
-  experience: readonly Experience[];
-  projects: readonly Project[];
 }
 
 // ============================================
@@ -243,15 +89,25 @@ export interface ChatHistory {
 }
 
 // ============================================
+// Photo Album Types
+// ============================================
+
+export interface PhotoAlbum {
+  id: string;
+  title: string;
+  description?: string;
+  coverImage?: string;
+  photos: readonly Image[];
+}
+
+// ============================================
 // App State Types
 // ============================================
 
-export type AppId = 'terminal' | 'notes' | 'github' | 'resume' | 'spotify';
+export type AppId = 'notes' | 'music' | 'photoAlbum';
 
 export interface ActiveApps {
-  terminal: boolean;
   notes: boolean;
-  github: boolean;
-  resume: boolean;
-  spotify: boolean;
+  music: boolean;
+  photoAlbum: boolean;
 }

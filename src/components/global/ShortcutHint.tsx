@@ -1,12 +1,11 @@
 import React from 'react';
-import { IoSearch, IoMail, IoDocumentTextOutline } from 'react-icons/io5';
+import { IoSearch, IoDocumentTextOutline } from 'react-icons/io5';
 import { FaRegKeyboard } from 'react-icons/fa';
 
 export default function ShortcutHint() {
 
   const shortcuts = [
     { key: '(CTRL/⌘)+K', label: 'Search', icon: <IoSearch size={14} /> },
-    { key: '(CTRL/⌘)+C', label: 'Contact', icon: <IoMail size={14} /> },
     { key: '? or (CTRL/⌘)+H', label: 'Help', icon: <FaRegKeyboard size={14} /> },
     { key: '(CTRL/⌘)+M or (CTRL/⌘)+Up', label: 'Mission Control', icon: <IoDocumentTextOutline size={14} /> },
 

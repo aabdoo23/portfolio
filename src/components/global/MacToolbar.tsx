@@ -1,18 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { MdWifi } from 'react-icons/md';
-import { FaApple, FaGithub, FaLinkedin, FaEnvelope, FaWindowRestore } from 'react-icons/fa';
+import { FaApple, FaWindowRestore } from 'react-icons/fa';
 import {
   IoSearchSharp,
   IoBatteryHalfOutline,
   IoCellular,
   IoDocumentText,
-  IoCodeSlash,
-  IoMail,
-  IoCall,
   IoHelpCircle,
 } from 'react-icons/io5';
 import { VscVscode } from 'react-icons/vsc';
-import { userConfig } from '../../config/index';
 
 type MenuItem = {
   label: string;
@@ -25,26 +21,21 @@ interface MacToolbarProps {
   onShowTutorial?: () => void;
   onOpenSpotlight?: () => void;
   onOpenMissionControl?: () => void;
-  onOpenContact?: () => void;
   onToggleShortcuts?: () => void;
   onCloseAllWindows?: () => void;
   onShuffleBackground?: () => void;
-  onOpenAdmin?: () => void;
 }
 
 export default function MacToolbar({
   onShowTutorial,
   onOpenSpotlight,
   onOpenMissionControl,
-  onOpenContact,
   onToggleShortcuts,
   onCloseAllWindows,
   onShuffleBackground,
-  onOpenAdmin,
 }: MacToolbarProps) {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [showSignature, setShowSignature] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -109,23 +100,6 @@ export default function MacToolbar({
   };
 
   const menus: Record<string, MenuItem[]> = {
-    File: [
-      {
-        label: 'Resume (PDF)',
-        icon: <IoDocumentText size={16} />,
-        action: () => window.open(userConfig.resume.url, '_blank'),
-      },
-      {
-        label: 'Projects (GitHub)',
-        icon: <IoCodeSlash size={16} />,
-        action: () => window.open(userConfig.social.github, '_blank'),
-      },
-      {
-        label: 'Admin Dashboard',
-        icon: <FaWindowRestore size={16} />,
-        action: () => onOpenAdmin ? onOpenAdmin() : (window.location.href = '/admin'),
-      },
-    ],
     View: [
       {
         label: 'Spotlight Search…',
@@ -150,11 +124,6 @@ export default function MacToolbar({
     ],
     Window: [
       {
-        label: 'Contact…',
-        icon: <IoMail size={16} />,
-        action: () => onOpenContact?.(),
-      },
-      {
         label: 'Close All Windows',
         icon: <IoDocumentText size={16} />,
         action: () => onCloseAllWindows?.(),
@@ -163,41 +132,6 @@ export default function MacToolbar({
         label: 'Shuffle Background',
         icon: <IoDocumentText size={16} />,
         action: () => onShuffleBackground?.(),
-      },
-    ],
-    Go: [
-      {
-        label: 'GitHub',
-        icon: <FaGithub size={16} />,
-        action: () => window.open(userConfig.social.github, '_blank'),
-      },
-      {
-        label: 'LinkedIn',
-        icon: <FaLinkedin size={16} />,
-        action: () => window.open(userConfig.social.linkedin, '_blank'),
-      },
-      {
-        label: 'Email',
-        icon: <FaEnvelope size={16} />,
-        action: () => window.open(`mailto:${userConfig.contact.email}`),
-      },
-    ],
-    Edit: [
-      {
-        label: 'Copy Email',
-        icon: <IoMail size={16} />,
-        action: () => {
-          navigator.clipboard.writeText(userConfig.contact.email);
-          alert('Email copied to clipboard!');
-        },
-      },
-      {
-        label: 'Copy Phone',
-        icon: <IoCall size={16} />,
-        action: () => {
-          navigator.clipboard.writeText(userConfig.contact.phone);
-          alert('Phone number copied to clipboard!');
-        },
       },
     ],
     Help: [
@@ -257,24 +191,6 @@ export default function MacToolbar({
       <div className='sticky top-0 z-50 hidden md:flex bg-black/20 backdrop-blur-md text-white h-6 px-4 items-center justify-between text-sm' role="menubar" aria-label="Application menu bar">
         <div className='flex items-center space-x-4' ref={menuRef}>
           <FaApple size={16} />
-          <div className="relative">
-            <span 
-              className='font-semibold hover:text-gray-300 transition-colors cursor-pointer'
-              onMouseEnter={() => setShowSignature(true)}
-              onMouseLeave={() => setShowSignature(false)}
-            >
-              {userConfig.name}
-            </span>
-            {showSignature && (
-              <div className="absolute top-full left-0 mt-1 bg-white/98 backdrop-blur-sm rounded-lg p-4 shadow-xl z-[100]">
-                  <img 
-                    src="/src/assets/images/me.svg" 
-                    alt="Signature" 
-                    className="w-[100px] h-[100px]"
-                  />
-              </div>
-            )}
-          </div>
           {Object.entries(menus).map(([menu, items]) => (
             <div key={menu} className="relative">
               <button 

@@ -4,22 +4,15 @@ import LandingPage from '../components/LandingPage.astro';
 import { userConfig } from '../config/index';
 ---
 
-<!-- 
-  Customize these values for your portfolio:
-  - title: Your name and role
-  - description: Brief description of your expertise
-  - canonical: Your website URL
-  - openGraph: Social media sharing metadata
--->
 <Layout
   title={userConfig.seo.title}
   description={userConfig.seo.description}
-  canonical={userConfig.website}
+  canonical=""
   openGraph={{
-    url: userConfig.website,
+    url: "",
     title: userConfig.seo.title,
     description: userConfig.seo.description,
-    site_name: userConfig.name,
+    site_name: "",
   }}
 >
   <LandingPage />

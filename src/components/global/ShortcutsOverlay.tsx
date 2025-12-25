@@ -18,13 +18,11 @@ export default function ShortcutsOverlay({ open, onClose }: ShortcutsOverlayProp
           <li><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">Esc</kbd>Close modal/menu</li>
           <li><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">↑</kbd><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">↓</kbd>Navigate list</li>
           <li><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">Enter</kbd>Select</li>
-          <li><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">Space</kbd>Quick Look (Projects)</li>
           <li><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">B</kbd>Shuffle wallpaper</li>
           <li><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">X</kbd>Close all windows</li>
           <li><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">Ctrl/Cmd</kbd><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">↑</kbd>or <kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">F3</kbd>Mission Control</li>
           <li><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 mr-2">?</kbd>Show this overlay</li>
         </ul>
-        <p className="text-xs text-gray-500 mt-4">Tip: Projects in Spotlight support Shift+Enter to open Live links.</p>
       </div>
     </div>
   );

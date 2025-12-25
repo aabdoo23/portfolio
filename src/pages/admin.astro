@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import AdminDashboard from '../components/admin/AdminDashboard';
 ---
 
-<Layout title="Admin Dashboard">
-  <AdminDashboard client:only="react" />
+<Layout title="Admin Dashboard" description="Admin dashboard for managing portfolio content">
+  <AdminDashboard client:load />
 </Layout>
+

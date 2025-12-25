@@ -1,20 +1,16 @@
-import React, { useEffect } from 'react';
-import { BsGithub, BsStickyFill, BsFilePdf } from 'react-icons/bs';
-import { RiTerminalFill } from 'react-icons/ri';
-import { BsSpotify } from 'react-icons/bs';
+import { useEffect } from 'react';
+import { BsStickyFill, BsCollection, BsMusicNoteBeamed } from 'react-icons/bs';
 
 interface MissionControlProps {
   isOpen: boolean;
   onClose: () => void;
   activeApps: {
-    terminal: boolean;
     notes: boolean;
-    github: boolean;
-    resume: boolean;
-    spotify: boolean;
+    music: boolean;
+    photoAlbum: boolean;
   };
-  onAppClick: (app: 'terminal' | 'notes' | 'github' | 'resume' | 'spotify') => void;
-  onAppClose: (app: 'terminal' | 'notes' | 'github' | 'resume' | 'spotify') => void;
+  onAppClick: (app: 'notes' | 'music' | 'photoAlbum') => void;
+  onAppClose: (app: 'notes' | 'music' | 'photoAlbum') => void;
 }
 
 export default function MissionControl({ isOpen, onClose, activeApps, onAppClick, onAppClose }: MissionControlProps) {
@@ -36,11 +32,9 @@ export default function MissionControl({ isOpen, onClose, activeApps, onAppClick
   if (!isOpen) return null;
 
   const apps = [
-    { id: 'github' as const, name: 'GitHub Projects', icon: BsGithub, color: 'from-black to-black/60', active: activeApps.github },
     { id: 'notes' as const, name: 'Notes', icon: BsStickyFill, color: 'from-yellow-600 to-yellow-400', active: activeApps.notes },
-    { id: 'terminal' as const, name: 'Terminal', icon: RiTerminalFill, color: 'from-black to-black/60', active: activeApps.terminal },
-    { id: 'resume' as const, name: 'Resume', icon: BsFilePdf, color: 'from-red-600 to-red-400', active: activeApps.resume },
-    { id: 'spotify' as const, name: 'Spotify', icon: BsSpotify, color: 'from-green-600 to-green-400', active: activeApps.spotify },
+    { id: 'photoAlbum' as const, name: 'Photos', icon: BsCollection, color: 'from-purple-600 to-purple-400', active: activeApps.photoAlbum },
+    { id: 'music' as const, name: 'Music', icon: BsMusicNoteBeamed, color: 'from-pink-600 to-pink-400', active: activeApps.music },
   ];
 
   const activeWindows = apps.filter((app) => app.active);

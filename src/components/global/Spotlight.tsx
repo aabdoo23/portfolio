@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Fuse from 'fuse.js';
 import type { FuseResult } from 'fuse.js';
-import { userConfig } from '../../config/index';
-import { FaGithub, FaLinkedin, FaRegFileAlt } from 'react-icons/fa';
-import { IoTerminalOutline, IoBookOutline, IoDocumentTextOutline, IoSearch } from 'react-icons/io5';
+import { FaRegFileAlt } from 'react-icons/fa';
+import { IoBookOutline, IoSearch } from 'react-icons/io5';
+import { BsCollection } from 'react-icons/bs';
 
 type SpotlightItem = {
   id: string;
@@ -19,25 +19,11 @@ export interface SpotlightProps {
   isOpen: boolean;
   onClose: () => void;
   actions: {
-    openTerminal: () => void;
     openNotes: () => void;
-    openContact: () => void;
-    openNotesSection: (
-      section:
-        | 'education'
-        | 'experience'
-        | 'courses'
-        | 'skills'
-        | 'roles'
-        | 'activities'
-        | 'competitions'
-    ) => void;
-    openGitHub: () => void;
-    openResume: () => void;
-    showTutorial: () => void;
+    openNotesSection: () => void;
+    openPhotoAlbum: () => void;
     closeAllWindows: () => void;
     shuffleBackground: () => void;
-    openProjectById: (id: string) => void;
   };
 }
 
@@ -45,106 +31,29 @@ export default function Spotlight({ isOpen, onClose, actions }: SpotlightProps) 
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
-  const [toast, setToast] = useState<string | null>(null);
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 1200);
-  };
-
-  const copyToClipboard = async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      showToast(`${label} copied`);
-    } catch (e) {
-      showToast('Copy failed');
-    }
-  };
 
   const items = useMemo<SpotlightItem[]>(() => {
-    const projectItems: SpotlightItem[] = userConfig.projects.map((p) => ({
-      id: `project:${p.id}`,
-      title: p.title,
-      subtitle: p.description,
-      category: 'Projects',
-      keywords: [p.repoUrl, p.liveUrl ?? '', ...p.techStack],
-      icon: <FaGithub className="text-gray-300" />,
-      action: () => actions.openProjectById(p.id)
-    }));
-
-    const expItems: SpotlightItem[] = userConfig.experience.map((e, idx) => ({
-      id: `experience:${idx}`,
-      title: e.title,
-      subtitle: `${e.company} • ${e.period}`,
-      category: 'Experience',
-      keywords: [e.company, e.location, ...(e.technologies ?? [])],
-      icon: <IoBookOutline className="text-gray-300" />,
-      action: () => actions.openNotesSection('experience')
-    }));
-
-    const educationItems: SpotlightItem[] = userConfig.education.map((ed, idx) => ({
-      id: `education:${idx}`,
-      title: ed.degree,
-      subtitle: `${ed.institution} • ${ed.year}`,
-      category: 'Education',
-      keywords: [ed.institution, ed.location ?? '', ed.major ?? ''],
-      icon: <IoBookOutline className="text-gray-300" />,
-      action: () => actions.openNotesSection('education')
-    }));
-
-    const skillItems: SpotlightItem[] = userConfig.skills.map((s, idx) => ({
-      id: `skill:${idx}`,
-      title: s,
-      category: 'Skills',
-      icon: <IoSearch className="text-gray-300" />,
-      action: () => actions.openNotesSection('skills')
-    }));
-
     const quickActions: SpotlightItem[] = [
-      {
-        id: 'action:contact',
-        title: 'Open Contact Form',
-        subtitle: 'Send a message directly',
-        category: 'Actions',
-        icon: <IoDocumentTextOutline className="text-gray-300" />,
-        action: actions.openContact,
-      },
-      {
-        id: 'action:terminal',
-        title: 'Open Terminal',
-        subtitle: 'Ask questions or run commands',
-        category: 'Actions',
-        icon: <IoTerminalOutline className="text-gray-300" />,
-        action: actions.openTerminal,
-      },
-      {
-        id: 'action:notes-experience',
-        title: 'Open Notes: Experience',
-        subtitle: 'Jump to professional experience',
-        category: 'Actions',
-        icon: <IoBookOutline className="text-gray-300" />,
-        action: () => actions.openNotesSection('experience'),
-      },
-      {
-        id: 'action:notes-education',
-        title: 'Open Notes: Education',
-        subtitle: 'Jump to education',
-        category: 'Actions',
-        icon: <IoBookOutline className="text-gray-300" />,
-        action: () => actions.openNotesSection('education'),
-      },
       {
         id: 'action:notes',
         title: 'Open Notes',
-        subtitle: 'Education, Experience, Skills',
+        subtitle: 'View your notes',
         category: 'Actions',
         icon: <IoBookOutline className="text-gray-300" />,
         action: actions.openNotes,
       },
       {
+        id: 'action:photoAlbum',
+        title: 'Open Photos',
+        subtitle: 'View iCloud shared album',
+        category: 'Actions',
+        icon: <BsCollection className="text-gray-300" />,
+        action: actions.openPhotoAlbum,
+      },
+      {
         id: 'action:close-all',
         title: 'Close all windows',
-        subtitle: 'Hide Notes, GitHub, Resume, Terminal',
+        subtitle: 'Hide all open windows',
         category: 'Actions',
         icon: <FaRegFileAlt className="text-gray-300" />,
         action: actions.closeAllWindows,
@@ -157,103 +66,9 @@ export default function Spotlight({ isOpen, onClose, actions }: SpotlightProps) 
         icon: <FaRegFileAlt className="text-gray-300" />,
         action: actions.shuffleBackground,
       },
-      {
-        id: 'action:copy-email',
-        title: 'Copy email to clipboard',
-        subtitle: userConfig.contact.email,
-        category: 'Actions',
-        icon: <IoDocumentTextOutline className="text-gray-300" />,
-        action: () => copyToClipboard(userConfig.contact.email, 'Email'),
-      },
-      {
-        id: 'action:copy-phone',
-        title: 'Copy phone to clipboard',
-        subtitle: userConfig.contact.phone,
-        category: 'Actions',
-        icon: <IoDocumentTextOutline className="text-gray-300" />,
-        action: () => copyToClipboard(userConfig.contact.phone, 'Phone'),
-      },
-      {
-        id: 'action:email-compose',
-        title: 'Compose email',
-        subtitle: userConfig.contact.email,
-        category: 'Actions',
-        icon: <IoDocumentTextOutline className="text-gray-300" />,
-        action: () => window.open(`mailto:${userConfig.contact.email}`),
-      },
-      {
-        id: 'action:open-website',
-        title: 'Open personal website',
-        subtitle: userConfig.website,
-        category: 'Actions',
-        icon: <IoDocumentTextOutline className="text-gray-300" />,
-        action: () => window.open(userConfig.website, '_blank'),
-      },
-      {
-        id: 'action:calendly',
-        title: 'Open Calendly',
-        subtitle: userConfig.contact.calendly,
-        category: 'Actions',
-        icon: <IoDocumentTextOutline className="text-gray-300" />,
-        action: () => window.open(userConfig.contact.calendly, '_blank'),
-      },
-      {
-        id: 'action:github',
-        title: 'Open GitHub Viewer',
-        subtitle: 'Browse featured repositories',
-        category: 'Actions',
-        icon: <FaGithub className="text-gray-300" />,
-        action: actions.openGitHub,
-      },
-      {
-        id: 'action:resume',
-        title: 'Open Resume',
-        subtitle: 'View PDF in a window',
-        category: 'Actions',
-        icon: <IoDocumentTextOutline className="text-gray-300" />,
-        action: actions.openResume,
-      },
-      {
-        id: 'action:tutorial',
-        title: 'Show Tutorial',
-        subtitle: 'Quick guided tour',
-        category: 'Actions',
-        icon: <FaRegFileAlt className="text-gray-300" />,
-        action: actions.showTutorial,
-      },
-      {
-        id: 'link:github',
-        title: 'Open GitHub Profile',
-        subtitle: userConfig.social.github,
-        category: 'Links',
-        icon: <FaGithub className="text-gray-300" />,
-        action: () => window.open(userConfig.social.github, '_blank'),
-      },
-      {
-        id: 'link:linkedin',
-        title: 'Open LinkedIn',
-        subtitle: userConfig.social.linkedin,
-        category: 'Links',
-        icon: <FaLinkedin className="text-gray-300" />,
-        action: () => window.open(userConfig.social.linkedin, '_blank'),
-      },
-      {
-        id: 'link:resume',
-        title: 'Open Resume (PDF URL)',
-        subtitle: userConfig.resume.url,
-        category: 'Links',
-        icon: <IoDocumentTextOutline className="text-gray-300" />,
-        action: () => window.open(userConfig.resume.url, '_blank'),
-      },
     ];
 
-    return [
-      ...quickActions,
-      ...projectItems,
-      ...expItems,
-      ...educationItems,
-      ...skillItems,
-    ];
+    return quickActions;
   }, [actions]);
 
   const fuse = useMemo(() => {
@@ -271,7 +86,7 @@ export default function Spotlight({ isOpen, onClose, actions }: SpotlightProps) 
   }, [items]);
 
   const results = useMemo<SpotlightItem[]>(() => {
-    const pinnedIds = ['action:terminal', 'action:notes'];
+    const pinnedIds = ['action:notes'];
     if (!query.trim()) {
       const base = items.slice(0, 8);
       // Ensure pinned are first when empty query
@@ -296,7 +111,7 @@ export default function Spotlight({ isOpen, onClose, actions }: SpotlightProps) 
 
   // Group results by category with fixed order
   const grouped = useMemo(() => {
-    const order = ['Actions', 'Projects', 'Experience', 'Education', 'Skills', 'Links'];
+    const order = ['Actions'];
     const map = new Map<string, SpotlightItem[]>();
     for (const item of results) {
       const arr = map.get(item.category) ?? [];
@@ -352,17 +167,6 @@ export default function Spotlight({ isOpen, onClose, actions }: SpotlightProps) 
           e.preventDefault();
           actions.closeAllWindows();
           close();
-        } else if (e.shiftKey && e.key === 'Enter') {
-          // If a project is active and has live URL, open it directly
-          const item = results[activeIndex];
-          if (item && item.id.startsWith('project:')) {
-            const projId = item.id.split(':')[1];
-            const proj = userConfig.projects.find(p => p.id === projId);
-            if (proj?.liveUrl) {
-              window.open(proj.liveUrl, '_blank');
-              close();
-            }
-          }
         }
       };
       document.addEventListener('keydown', onKeyDown);
@@ -388,7 +192,7 @@ export default function Spotlight({ isOpen, onClose, actions }: SpotlightProps) 
               setQuery(e.target.value);
               setActiveIndex(0);
             }}
-            placeholder="Search projects, experience, skills, or actions…"
+            placeholder="Search actions…"
             className="flex-1 bg-transparent outline-none text-sm md:text-base text-white placeholder-gray-400"
             aria-label="Search input"
           />
@@ -423,21 +227,7 @@ export default function Spotlight({ isOpen, onClose, actions }: SpotlightProps) 
                         <div className="text-sm text-white">{item.title}</div>
                         <div className="text-xs text-gray-400">{item.subtitle ?? item.category}</div>
                       </div>
-                      {item.id.startsWith('project:') && (() => {
-                        const projId = item.id.split(':')[1];
-                        const proj = userConfig.projects.find(p => p.id === projId);
-                        return proj?.liveUrl ? (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); window.open(proj.liveUrl!, '_blank'); close(); }}
-                            className="text-[10px] text-green-400 hover:text-green-300 border border-green-400/30 rounded px-1.5 py-0.5"
-                            title="Open Live"
-                          >
-                            Live
-                          </button>
-                        ) : (
-                          <span className="text-[10px] text-gray-500 border border-white/10 rounded px-1 py-0.5">{item.category}</span>
-                        );
-                      })()}
+                      <span className="text-[10px] text-gray-500 border border-white/10 rounded px-1 py-0.5">{item.category}</span>
                     </button>
                   </li>
                 );
@@ -456,11 +246,6 @@ export default function Spotlight({ isOpen, onClose, actions }: SpotlightProps) 
           ))}
         </ul>
       </div>
-      {toast && (
-        <div className="pointer-events-none fixed right-4 top-4 z-[70] rounded bg-white/10 text-white text-xs px-3 py-2 border border-white/10 shadow">
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

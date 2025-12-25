@@ -1,24 +1,45 @@
-import { BsGithub, BsSpotify, BsLinkedin } from 'react-icons/bs';
-import { IoIosMail, IoIosCall } from 'react-icons/io';
-import { userConfig } from '../../config/index';
-import { BsStickyFill } from 'react-icons/bs';
-import { RiTerminalFill } from 'react-icons/ri';
-import { BsFilePdf } from 'react-icons/bs';
+import { useState, useEffect } from 'react';
+import appleNotesIcon from '../../assets/images/apple-notes.svg?url';
+import applePhotosIcon from '../../assets/images/apple-photos.svg?url';
+import appleMusicIcon from '../../assets/images/apple-music.svg?url';
 
 interface MobileDockProps {
-  onGitHubClick: () => void;
   onNotesClick: () => void;
-  onResumeClick: () => void;
-  onTerminalClick: () => void;
+  onPhotoAlbumClick: () => void;
 }
 
-export default function MobileDock({ onGitHubClick, onNotesClick, onResumeClick, onTerminalClick }: MobileDockProps) {
-  const handleEmailClick = () => {
-    window.location.href = `mailto:${userConfig.contact.email}`;
-  };
+export default function MobileDock({ onNotesClick, onPhotoAlbumClick }: MobileDockProps) {
+  const [playlistId, setPlaylistId] = useState<string | null>(null);
 
-  const handleSpotifyClick = () => {
-    window.open(`https://open.spotify.com/playlist/${userConfig.spotify.playlistId}`, '_blank');
+  // Fetch app config from API
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch('/api/content/config');
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.music?.playlistId && typeof data.music.playlistId === 'string') {
+            setPlaylistId(data.music.playlistId);
+          } else {
+            setPlaylistId(null);
+          }
+        } else {
+          console.error('Failed to fetch config:', response.status, response.statusText);
+          setPlaylistId(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch config:', error);
+        setPlaylistId(null);
+      }
+    };
+
+    fetchConfig();
+  }, []);
+
+  const handleAppleMusicClick = () => {
+    if (playlistId) {
+      window.open(playlistId, '_blank');
+    }
   };
 
   return (
@@ -26,74 +47,29 @@ export default function MobileDock({ onGitHubClick, onNotesClick, onResumeClick,
       {/* Top row: viewer icons */}
       <div className='mx-4 mb-4 p-3 rounded-3xl space-x-4 flex justify-around items-center max-w-[400px] mx-auto' role="toolbar" aria-label="Apps">
         <button
-          onClick={onGitHubClick}
-          aria-label='Open GitHub projects'
-          className='flex flex-col items-center cursor-pointer'
-        >
-          <div className='w-18 h-18 bg-black rounded-2xl flex items-center justify-center'>
-            <BsGithub size={55} className='text-white' />
-          </div>
-        </button>
-        <button
           onClick={onNotesClick}
           aria-label='Open Notes'
           className='flex flex-col items-center cursor-pointer'
         >
-          <div className='w-18 h-18 bg-gradient-to-t from-yellow-600 to-yellow-400 rounded-2xl flex items-center justify-center'>
-            <BsStickyFill size={55} className='text-white' />
+          <div className='w-18 h-18 bg-gradient-to-t from-yellow-600 to-yellow-400 rounded-2xl overflow-hidden'>
+            <img 
+              src={appleNotesIcon} 
+              alt="Notes"
+              className="w-full h-full"
+            />
           </div>
         </button>
         <button
-          onClick={onResumeClick}
-          aria-label='Open Resume'
+          onClick={onPhotoAlbumClick}
+          aria-label='Open Photos'
           className='flex flex-col items-center cursor-pointer'
         >
-          <div className='w-18 h-18 bg-gradient-to-t from-red-600 to-red-400 rounded-2xl flex items-center justify-center'>
-            <BsFilePdf size={55} className='text-white' />
-          </div>
-        </button>
-        <button
-          onClick={onTerminalClick}
-          aria-label='Open Terminal'
-          className='flex flex-col items-center cursor-pointer'
-        >
-          <div className='w-18 h-18 bg-black rounded-2xl flex items-center justify-center'>
-            <RiTerminalFill size={55} className='text-white' />
-          </div>
-        </button>
-      </div>
-
-      {/* Bottom row: contact shortcuts */}
-      <div className='mx-4 mb-4 p-3 bg-gradient-to-t from-gray-700 to-gray-800 backdrop-blur-xl rounded-3xl space-x-4 flex justify-around items-center max-w-[400px] mx-auto' role="toolbar" aria-label="Contact shortcuts">
-        <a href={`tel:${userConfig.contact.phone}`} className='flex flex-col items-center' aria-label={`Call ${userConfig.contact.phone}`}>
-          <div className='w-18 h-18 bg-gradient-to-t from-green-600 to-green-400 rounded-2xl flex items-center justify-center'>
-            <IoIosCall size={55} className='text-white' />
-          </div>
-        </a>
-
-        <button
-          onClick={handleEmailClick}
-          aria-label={`Email ${userConfig.contact.email}`}
-          className='flex flex-col items-center cursor-pointer'
-        >
-          <div className='w-18 h-18 bg-gradient-to-t from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center'>
-            <IoIosMail size={55} className='text-white' />
-          </div>
-        </button>
-
-        <a href={userConfig.social.linkedin} className='flex flex-col items-center' aria-label='Open LinkedIn profile' target="_blank" rel="noreferrer noopener">
-          <div className='w-18 h-18 bg-[#0a66c2] rounded-2xl flex items-center justify-center'>
-            <BsLinkedin size={50} className='text-white' />
-          </div>
-        </a>
-
-        <button
-          onClick={handleSpotifyClick}
-          aria-label='Open Spotify playlist in new tab'
-          className='flex flex-col items-center cursor-pointer'
-        >
-          <div className='w-18 h-18 bg-gradient-to-t from-black to-black/55 rounded-2xl flex items-center justify-center'>
-            <BsSpotify size={55} className='text-[#1ED760]' />
+          <div className='w-18 h-18 bg-gradient-to-t from-purple-600 to-purple-400 rounded-2xl overflow-hidden'>
+            <img 
+              src={applePhotosIcon} 
+              alt="Photos"
+              className="w-full h-full"
+            />
           </div>
         </button>
       </div>

@@ -1,28 +1,32 @@
 ---
-import { getImage } from 'astro:assets';
 import AppLayout from '../layouts/AppLayout';
-import macBackground1 from '../assets/images/mac-background1.jpg';
-import macBackground2 from '../assets/images/mac-background2.jpg';
-import macBackground3 from '../assets/images/mac-background3.jpg';
 
-const backgrounds = [macBackground1, macBackground2, macBackground3];
+// Fetch backgrounds from API
+let backgrounds: Array<{ id: string; url: string; display_url?: string }> = [];
+let backgroundMap: Record<string, string> = {};
 
-function getRandomBackground() {
-  return `bg-${Math.floor(Math.random() * backgrounds.length) + 1}`;
+try {
+  // Try to fetch from API - use relative URL for same-origin requests
+  const baseUrl = import.meta.env.PUBLIC_SITE_URL || (import.meta.env.DEV ? 'http://localhost:4321' : '');
+  const apiUrl = baseUrl ? `${baseUrl}/api/content/backgrounds` : '/api/content/backgrounds';
+  const response = await fetch(apiUrl);
+  if (response.ok) {
+    backgrounds = await response.json();
+  }
+} catch (error) {
+  console.warn('[LandingPage] Failed to fetch backgrounds from API');
 }
 
-const optimizedBackgrounds = await Promise.all(
-  backgrounds.map((bg) =>
-    getImage({
-      src: bg,
-      width: 3500,
-    })
-  )
+// Create background map from API backgrounds - use full resolution URL
+backgroundMap = Object.fromEntries(
+  backgrounds.map((bg, index) => [`bg-${index + 1}`, bg.url])
 );
 
-const backgroundMap = Object.fromEntries(
-  optimizedBackgrounds.map((bg, index) => [`bg-${index + 1}`, bg.src])
-);
+function getRandomBackground() {
+  const bgKeys = Object.keys(backgroundMap);
+  if (bgKeys.length === 0) return '';
+  return bgKeys[Math.floor(Math.random() * bgKeys.length)];
+}
 ---
 
 <AppLayout
